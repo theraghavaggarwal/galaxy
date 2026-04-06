@@ -2,337 +2,44 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anime Lighthouse | codingwithvishesh V2</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <meta charset="UTF-8">
+  <title>Anime.js Periodic Table Auto Layout animation</title>
+  <link rel="stylesheet" href="style.css">
 
-        body,
-        html {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background-color: #010a15;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        canvas {
-            display: block;
-        }
-
-        /* Jabardast Cyberpunk/Anime Footer */
-        #footer {
-            position: absolute;
-            bottom: 20px;
-            width: 100%;
-            text-align: center;
-            color: #00e5ff;
-            font-size: 1.5rem;
-            font-weight: bold;
-            letter-spacing: 2px;
-            text-shadow: 0 0 10px #00e5ff, 0 0 20px #00e5ff, 0 0 40px #00e5ff;
-            pointer-events: none;
-            z-index: 10;
-            animation: pulse 2s infinite alternate;
-        }
-
-        #footer span {
-            color: #ff0055;
-            text-shadow: 0 0 10px #ff0055, 0 0 20px #ff0055;
-            display: inline-block;
-            animation: heartbeat 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0% {
-                opacity: 0.8;
-            }
-
-            100% {
-                opacity: 1;
-                text-shadow: 0 0 15px #00e5ff, 0 0 30px #00e5ff, 0 0 60px #00e5ff;
-            }
-        }
-
-        @keyframes heartbeat {
-
-            0%,
-            100% {
-                transform: scale(1);
-            }
-
-            50% {
-                transform: scale(1.2);
-            }
-        }
-    </style>
 </head>
 
 <body>
+  <div class="controls">
+    <div class="controls-group display br">
+      <button class="is-active toggle" id="table">table</button>
+      <button class="toggle" id="sphere">sphere</button>
+      <button class="toggle" id="helix">helix</button>
+      <button class="toggle" id="grid">grid</button>
+    </div>
+  </div>
+  <div id="scene">
+    <div id="scene-content" data-layout="table"></div>
+  </div>
+  <div class="credits">
+    3D transform calculations ported from this three.js <a href="https://threejs.org/examples/css3d_periodictable.html"
+      target="_blank">demo</a>.
+  </div>
+  <template id="element">
+    <button class="element" data-color="0">
+      <div class="element-number"></div>
+      <div class="element-symbol"></div>
+      <div class="element-title"></div>
+      <div class="element-description"></div>
+    </button>
+  </template>
+  <script type="module" src="./script.js"></script>
 
-    <canvas id="animeCanvas"></canvas>
-    <div id="footer">Made with <span>❤️</span> codingwithvishesh</div>
-
-    <script>
-        const canvas = document.getElementById('animeCanvas');
-        const ctx = canvas.getContext('2d');
-
-        let width, height;
-        let mouse = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
-        let stars = [];
-        let particles = [];
-        let boats = [];
-        let mountains = [];
-
-        function init() {
-            width = canvas.width = window.innerWidth;
-            height = canvas.height = window.innerHeight;
-
-            // Generate Stars
-            stars = [];
-            for (let i = 0; i < 200; i++) {
-                stars.push({
-                    x: Math.random() * width,
-                    y: Math.random() * (height * 0.7),
-                    size: Math.random() * 1.5,
-                    alpha: Math.random()
-                });
-            }
-
-            // Generate Mountain vertices (jagged peaks)
-            mountains = [];
-            let currentX = 0;
-            const mountainBaseY = height * 0.75;
-            while (currentX < width) {
-                currentX += Math.random() * 100 + 50; // Random width
-                mountains.push({
-                    x: currentX,
-                    y: mountainBaseY - (Math.random() * 200 + 100) // Random height
-                });
-            }
-            // Close the shape
-            mountains.push({ x: width, y: mountainBaseY });
-            mountains.push({ x: width, y: height }); // Make it solid below ground
-            mountains.push({ x: 0, y: height });
-            mountains.unshift({ x: 0, y: mountainBaseY });
-
-
-            // Generate Boats
-            boats = [
-                { x: width * 0.3, y: height * 0.85, speed: 0.8, size: 30, direction: 1, cabinColor: '#ff9900' },
-                { x: width * 0.7, y: height * 0.92, speed: 1.2, size: 25, direction: -1, cabinColor: '#ffee00' }
-            ];
-        }
-
-        // Mouse Tracker
-        window.addEventListener('mousemove', (e) => {
-            mouse.x = e.clientX;
-            mouse.y = e.clientY;
-        });
-
-        window.addEventListener('touchmove', (e) => {
-            mouse.x = e.touches[0].clientX;
-            mouse.y = e.touches[0].clientY;
-        });
-
-        window.addEventListener('resize', init);
-
-        function drawBackground() {
-            // Anime Sky Gradient
-            let gradient = ctx.createLinearGradient(0, 0, 0, height);
-            gradient.addColorStop(0, '#010a15'); // Deep space
-            gradient.addColorStop(0.5, '#0b1d3a'); // Night blue
-            gradient.addColorStop(0.8, '#1e3c72'); // Horizon glow
-            gradient.addColorStop(1, '#000000'); // Ocean shadow
-
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, width, height);
-
-            // Draw Stars
-            stars.forEach(star => {
-                ctx.fillStyle = `rgba(255, 255, 255, ${star.alpha})`;
-                ctx.beginPath();
-                ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
-                ctx.fill();
-                star.alpha += (Math.random() - 0.5) * 0.05;
-                if (star.alpha < 0) star.alpha = 0;
-                if (star.alpha > 1) star.alpha = 1;
-            });
-        }
-
-        function drawMountains() {
-            // Draw Mountain Silhouettes
-            ctx.fillStyle = '#050505'; // Dark color, behind the lighthouse
-            ctx.beginPath();
-            ctx.moveTo(mountains[0].x, mountains[0].y);
-            for (let i = 1; i < mountains.length; i++) {
-                ctx.lineTo(mountains[i].x, mountains[i].y);
-            }
-            ctx.closePath();
-            ctx.fill();
-        }
-
-        function drawOcean() {
-            // Draw Ocean (below mountains and lighthouse island)
-            ctx.fillStyle = 'rgba(2, 8, 20, 0.95)';
-            ctx.fillRect(0, height * 0.75, width, height * 0.25);
-        }
-
-        function drawBoats() {
-            boats.forEach(boat => {
-                // Move boat
-                boat.x += boat.speed * boat.direction;
-
-                // Reset position if it goes off-screen
-                if (boat.direction === 1 && boat.x > width + boat.size * 2) {
-                    boat.x = -boat.size * 2;
-                } else if (boat.direction === -1 && boat.x < -boat.size * 2) {
-                    boat.x = width + boat.size * 2;
-                }
-
-                // Draw boat silhouette
-                ctx.fillStyle = '#111';
-                ctx.beginPath();
-                ctx.moveTo(boat.x, boat.y);
-                ctx.lineTo(boat.x + boat.size, boat.y);
-                ctx.lineTo(boat.x + boat.size * 1.2, boat.y + boat.size * 0.3);
-                ctx.lineTo(boat.x - boat.size * 0.2, boat.y + boat.size * 0.3);
-                ctx.closePath();
-                ctx.fill();
-
-                // Draw warm cabin light
-                ctx.shadowBlur = 15;
-                ctx.shadowColor = boat.cabinColor;
-                ctx.fillStyle = boat.cabinColor;
-                ctx.fillRect(boat.x + boat.size * 0.2, boat.y - boat.size * 0.2, boat.size * 0.4, boat.size * 0.2);
-                ctx.shadowBlur = 0; // Reset shadow
-            });
-        }
-
-        function drawLighthouse() {
-            const lx = width * 0.15; // Left side
-            const ly = height * 0.75; // Ground level
-
-            // Island/Rock (Must be drawn over the deep ocean)
-            ctx.fillStyle = '#0a0a0a';
-            ctx.beginPath();
-            ctx.moveTo(lx - 120, ly);
-            ctx.lineTo(lx + 120, ly);
-            ctx.lineTo(lx + 180, height);
-            ctx.lineTo(lx - 180, height);
-            ctx.fill();
-
-            // Tower Base
-            ctx.beginPath();
-            ctx.moveTo(lx - 30, ly);
-            ctx.lineTo(lx + 30, ly);
-            ctx.lineTo(lx + 20, ly - 200);
-            ctx.lineTo(lx - 20, ly - 200);
-            ctx.fill();
-
-            // Glowing Top Room
-            ctx.fillStyle = '#111';
-            ctx.fillRect(lx - 25, ly - 220, 50, 20);
-
-            ctx.shadowBlur = 20;
-            ctx.shadowColor = '#00e5ff';
-            ctx.fillStyle = '#e0f7fa';
-            ctx.fillRect(lx - 15, ly - 215, 30, 10); // Light Bulb core
-            ctx.shadowBlur = 0;
-
-            // Roof
-            ctx.fillStyle = '#050505';
-            ctx.beginPath();
-            ctx.moveTo(lx - 35, ly - 220);
-            ctx.lineTo(lx + 35, ly - 220);
-            ctx.lineTo(lx, ly - 260);
-            ctx.fill();
-
-            return { x: lx, y: ly - 210 }; // Return light source coordinate
-        }
-
-        function drawLightBeam(lightPos) {
-            // Calculate angle towards mouse
-            const dx = mouse.x - lightPos.x;
-            const dy = mouse.y - lightPos.y;
-            const angle = Math.atan2(dy, dx);
-
-            const beamLength = width * 1.5;
-            const spread = 0.35; // How wide the beam is
-
-            ctx.save();
-            ctx.translate(lightPos.x, lightPos.y);
-            ctx.rotate(angle);
-
-            // Volumetric glowing beam
-            let beamGradient = ctx.createLinearGradient(0, 0, beamLength, 0);
-            beamGradient.addColorStop(0, 'rgba(0, 229, 255, 0.8)'); // Cyan core
-            beamGradient.addColorStop(0.5, 'rgba(0, 229, 255, 0.2)');
-            beamGradient.addColorStop(1, 'rgba(0, 229, 255, 0)');
-
-            ctx.globalCompositeOperation = 'screen';
-            ctx.fillStyle = beamGradient;
-
-            ctx.beginPath();
-            ctx.moveTo(0, 0);
-            ctx.lineTo(beamLength, Math.sin(spread) * beamLength);
-            ctx.lineTo(beamLength, -Math.sin(spread) * beamLength);
-            ctx.closePath();
-            ctx.fill();
-
-            ctx.restore();
-
-            // Add Light Particles in the air
-            if (Math.random() < 0.3) {
-                particles.push({
-                    x: lightPos.x,
-                    y: lightPos.y,
-                    speedX: Math.cos(angle + (Math.random() - 0.5) * spread) * (Math.random() * 5 + 2),
-                    speedY: Math.sin(angle + (Math.random() - 0.5) * spread) * (Math.random() * 5 + 2),
-                    life: 1,
-                    size: Math.random() * 3
-                });
-            }
-
-            // Update and draw particles
-            for (let i = particles.length - 1; i >= 0; i--) {
-                let p = particles[i];
-                p.x += p.speedX;
-                p.y += p.speedY;
-                p.life -= 0.02;
-
-                if (p.life <= 0) {
-                    particles.splice(i, 1);
-                } else {
-                    ctx.beginPath();
-                    ctx.fillStyle = `rgba(255, 255, 255, ${p.life})`;
-                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-            }
-        }
-
-        function animate() {
-            ctx.clearRect(0, 0, width, height);
-
-            drawBackground();
-            drawMountains(); // Draw behind everything else on ground level
-            drawOcean();
-            drawBoats(); // Boats on the ocean surface
-            const lightSource = drawLighthouse(); // Finally the lighthouse structure
-            drawLightBeam(lightSource);
-
-            requestAnimationFrame(animate);
-        }
-
-        init();
-        animate();
-    </script>
 </body>
+<div class="credits">
+  3D transform calculations ported from this three.js <a href="https://threejs.org/examples/css3d_periodictable.html"
+    target="_blank">demo</a>.<br>
+  <span class="vishesh-footer">Made with ❤️ by <a href="https://instagram.com/codingwithvishesh"
+      target="_blank">codingwithvishesh</a></span>
+</div>
 
 </html>
